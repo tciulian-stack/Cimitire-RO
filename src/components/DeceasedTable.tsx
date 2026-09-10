@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { DeceasedRecord } from '../types/cemetery';
-import { Flame, Eye, Edit3, Trash2, MapPin, Award, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Flame, MapPin, Award, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface DeceasedTableProps {
   records: DeceasedRecord[];
   onSelectRecord: (record: DeceasedRecord) => void;
-  onEditRecord: (record: DeceasedRecord) => void;
-  onDeleteRecord: (recordId: string) => void;
+  onEditRecord?: (record: DeceasedRecord) => void;
+  onDeleteRecord?: (recordId: string) => void;
   onLightCandle: (recordId: string) => void;
 }
 
-type SortField = 'lastName' | 'cemeteryName' | 'birthDate' | 'deathDate' | 'gender' | 'county' | 'candlesLit' | 'plot' | 'graveNumber' | 'ageAtDeath';
+type SortField = 'lastName' | 'cemeteryName' | 'birthDate' | 'deathDate' | 'gender' | 'profession' | 'county' | 'candlesLit' | 'plot' | 'graveNumber' | 'ageAtDeath';
 
 export const DeceasedTable: React.FC<DeceasedTableProps> = ({
   records,
@@ -109,6 +109,12 @@ export const DeceasedTable: React.FC<DeceasedTableProps> = ({
                   <ArrowUpDown className="w-3 h-3" />
                 </div>
               </th>
+              <th className="py-3 px-4 cursor-pointer hover:text-amber-400 whitespace-nowrap" onClick={() => handleSort('profession')}>
+                <div className="flex items-center space-x-1">
+                  <span>Profesie</span>
+                  <ArrowUpDown className="w-3 h-3" />
+                </div>
+              </th>
               <th className="py-3 px-4 cursor-pointer hover:text-amber-400" onClick={() => handleSort('plot')}>
                 <div className="flex items-center space-x-1">
                   <span>Figură</span>
@@ -133,9 +139,6 @@ export const DeceasedTable: React.FC<DeceasedTableProps> = ({
                   <ArrowUpDown className="w-3 h-3" />
                 </div>
               </th>
-              <th className="py-3 px-4 text-right">
-                <span>Acțiuni</span>
-              </th>
             </tr>
           </thead>
 
@@ -151,7 +154,8 @@ export const DeceasedTable: React.FC<DeceasedTableProps> = ({
               paginatedRecords.map((record) => (
                 <tr
                   key={record.id}
-                  className="hover:bg-amber-50/50 transition-colors group"
+                  onClick={() => onSelectRecord(record)}
+                  className="hover:bg-amber-50/50 transition-colors group cursor-pointer"
                 >
                   {/* 1. Cemetery */}
                   <td className="py-3 px-4">
@@ -174,12 +178,9 @@ export const DeceasedTable: React.FC<DeceasedTableProps> = ({
                   <td className="py-3 px-4">
                     <div className="flex flex-col">
                       <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => onSelectRecord(record)}
-                          className="font-bold text-slate-900 hover:text-amber-700 text-left cursor-pointer transition-colors"
-                        >
+                        <span className="font-bold text-slate-900 group-hover:text-amber-700 transition-colors">
                           {record.lastName} {record.firstName !== 'N/A' ? record.firstName : ''}
-                        </button>
+                        </span>
 
                         {record.graveStatus === 'Monument Protejat' && (
                           <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] bg-amber-100 text-amber-800 border border-amber-300 font-medium" title="Monument Istoric / Protejat">
@@ -192,12 +193,6 @@ export const DeceasedTable: React.FC<DeceasedTableProps> = ({
                       {record.maidenName && record.maidenName !== 'N/A' && (
                         <span className="text-[11px] text-slate-500 italic">
                           (n. {record.maidenName})
-                        </span>
-                      )}
-
-                      {record.profession && record.profession !== 'N/A' && (
-                        <span className="text-[11px] text-amber-800 font-medium line-clamp-1 mt-0.5">
-                          {record.profession}
                         </span>
                       )}
                     </div>
@@ -246,6 +241,17 @@ export const DeceasedTable: React.FC<DeceasedTableProps> = ({
                     })()}
                   </td>
 
+                  {/* Profesie */}
+                  <td className="py-3 px-4">
+                    {record.profession && record.profession !== 'N/A' && record.profession.trim() !== '' ? (
+                      <span className="text-xs text-slate-800 font-medium line-clamp-2" title={record.profession}>
+                        {record.profession}
+                      </span>
+                    ) : (
+                      renderCellText('N/A')
+                    )}
+                  </td>
+
                   {/* Figură */}
                   <td className="py-3 px-4">
                     <span className="inline-block bg-slate-100 text-slate-800 px-2 py-0.5 rounded border border-slate-200 font-mono text-xs font-semibold">
@@ -263,7 +269,10 @@ export const DeceasedTable: React.FC<DeceasedTableProps> = ({
                   {/* Candles Lit */}
                   <td className="py-3 px-4 text-center">
                     <button
-                      onClick={() => onLightCandle(record.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onLightCandle(record.id);
+                      }}
                       className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-900 transition-all font-semibold text-xs border border-amber-300 shadow-2xs group-hover:scale-105"
                       title="Aprinde o lumânare virtuală"
                     >
@@ -290,35 +299,6 @@ export const DeceasedTable: React.FC<DeceasedTableProps> = ({
                         return 'N/A';
                       })()}
                     </span>
-                  </td>
-
-                  {/* Action buttons */}
-                  <td className="py-3 px-4 text-right">
-                    <div className="flex items-center justify-end space-x-1">
-                      <button
-                        onClick={() => onSelectRecord(record)}
-                        className="p-1.5 text-slate-600 hover:text-amber-700 hover:bg-amber-100 rounded-md transition-colors"
-                        title="Vezi Fișă Detaliată"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-
-                      <button
-                        onClick={() => onEditRecord(record)}
-                        className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-                        title="Editează înregistrarea"
-                      >
-                        <Edit3 className="w-4 h-4" />
-                      </button>
-
-                      <button
-                        onClick={() => onDeleteRecord(record.id)}
-                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                        title="Șterge înregistrarea"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
                   </td>
                 </tr>
               ))
