@@ -1,0 +1,6 @@
+{
+  "name": "Bază de Date Cimitire România",
+  "description": "Bază de date online pentru cimitirele din România și persoanele înhumate (loc de veci, sector, parcelă, mormânt). Suport import Excel/CSV și gestionare date N/A.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
