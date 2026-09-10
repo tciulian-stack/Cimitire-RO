@@ -53,8 +53,9 @@ export interface CemeteryInfo {
 }
 
 export interface ExcelColumnMapping {
-  lastName: string;
-  firstName: string;
+  fullName?: string;
+  lastName?: string;
+  firstName?: string;
   maidenName: string;
   birthDate: string;
   deathDate: string;

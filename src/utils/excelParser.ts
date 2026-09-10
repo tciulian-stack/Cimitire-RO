@@ -24,6 +24,7 @@ export function sanitizeFieldValue(val: any): string {
 // Auto-guess initial mapping based on header strings
 export function guessColumnMapping(headers: string[]): ExcelColumnMapping {
   const mapping: ExcelColumnMapping = {
+    fullName: '',
     lastName: '',
     firstName: '',
     maidenName: '',
@@ -50,16 +51,26 @@ export function guessColumnMapping(headers: string[]): ExcelColumnMapping {
   headers.forEach((header) => {
     const h = clean(header);
 
-    if (!mapping.lastName && (
-      h.includes('nume de familie') || 
-      h.includes('surname') || 
-      h === 'nume' || 
-      h.includes('nume complet') || 
-      h.includes('nume si prenume') || 
-      h.includes('nume decedat') || 
-      h.includes('persoana') || 
-      h.includes('decedat')
+    if (!mapping.fullName && (
+      h.includes('nume & prenume') ||
+      h.includes('nume si prenume') ||
+      h.includes('nume si prenume') ||
+      h.includes('nume/prenume') ||
+      h.includes('nume complet') ||
+      h.includes('nume decedat') ||
+      h.includes('nume persoana') ||
+      h.includes('persoana decedata') ||
+      h.includes('nume de familie') ||
+      h === 'nume' ||
+      h === 'nume & prenume' ||
+      h === 'nume si prenume' ||
+      h.includes('persoana') ||
+      h.includes('decedat') ||
+      h.includes('surname') ||
+      h.includes('full name') ||
+      h.includes('fullname')
     )) {
+      mapping.fullName = header;
       mapping.lastName = header;
     } else if (!mapping.firstName && (
       h.includes('prenume') || 
@@ -198,15 +209,42 @@ export function convertRowsToRecords(
       return sanitizeFieldValue(row[headerName]);
     };
 
-    let lastName = getVal('lastName');
-    let firstName = getVal('firstName');
+    let fullName = getVal('fullName');
+    let lastName = 'N/A';
+    let firstName = 'N/A';
 
-    // If lastName has full name (e.g. "Popescu Ion") and firstName is 'N/A'
-    if (lastName !== 'N/A' && firstName === 'N/A' && lastName.includes(' ')) {
-      const parts = lastName.split(/\s+/);
-      if (parts.length > 1) {
-        lastName = parts[0];
-        firstName = parts.slice(1).join(' ');
+    if (fullName !== 'N/A' && fullName.trim() !== '') {
+      // Check comma separated: "Popescu, Ion"
+      if (fullName.includes(',')) {
+        const parts = fullName.split(',').map((p) => p.trim());
+        lastName = parts[0] || 'N/A';
+        firstName = parts.slice(1).join(' ').trim() || 'N/A';
+      } else {
+        const parts = fullName.trim().split(/\s+/);
+        if (parts.length > 1) {
+          lastName = parts[0];
+          firstName = parts.slice(1).join(' ');
+        } else if (parts.length === 1) {
+          lastName = parts[0];
+          firstName = 'N/A';
+        }
+      }
+    } else {
+      lastName = getVal('lastName');
+      firstName = getVal('firstName');
+    }
+
+    // If firstName is still N/A, automatically detect if the raw row has a separate 'prenume' column
+    if (firstName === 'N/A') {
+      const prenumeKey = Object.keys(row).find((k) => {
+        const ck = k.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+        return ck === 'prenume' || ck.includes('first name') || ck.includes('given name');
+      });
+      if (prenumeKey && row[prenumeKey]) {
+        const pVal = sanitizeFieldValue(row[prenumeKey]);
+        if (pVal !== 'N/A') {
+          firstName = pVal;
+        }
       }
     }
 
@@ -400,11 +438,11 @@ export function exportRecordsToCSV(records: DeceasedRecord[], filename: string =
 export function downloadSampleTemplate() {
   const sampleData = [
     {
-      'Nume de Familie': 'Popescu',
-      'Prenume': 'Ion',
+      'Nume & Prenume': 'Popescu Ion',
       'Nume Anterior / De Fată': 'N/A',
       'Data Nașterii': '12.05.1945',
       'Data Decesului': '10.10.2018',
+      'Gen': 'Masculin',
       'Vârsta': '73',
       'Cimitir': 'Cimitirul Bellu',
       'Județ': 'București',
@@ -419,11 +457,11 @@ export function downloadSampleTemplate() {
       'Stare Mormânt': 'Îngrijit'
     },
     {
-      'Nume de Familie': 'Ionescu',
-      'Prenume': 'Elena',
+      'Nume & Prenume': 'Ionescu Elena',
       'Nume Anterior / De Fată': 'Gheorghiu',
       'Data Nașterii': '01.01.1950',
       'Data Decesului': '15.03.2021',
+      'Gen': 'Feminin',
       'Vârsta': '71',
       'Cimitir': 'Cimitirul Eternitatea',
       'Județ': 'Iași',

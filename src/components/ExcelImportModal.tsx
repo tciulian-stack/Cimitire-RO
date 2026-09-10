@@ -30,6 +30,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
   const [parsedHeaders, setParsedHeaders] = useState<string[]>([]);
   const [parsedRows, setParsedRows] = useState<Record<string, any>[]>([]);
   const [mapping, setMapping] = useState<ExcelColumnMapping>({
+    fullName: '',
     lastName: '',
     firstName: '',
     maidenName: '',
@@ -265,8 +266,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-80 overflow-y-auto pr-1">
                 
                 {[
-                  { key: 'lastName', label: 'Nume de Familie *' },
-                  { key: 'firstName', label: 'Prenume' },
+                  { key: 'fullName', label: 'Nume & Prenume *' },
                   { key: 'maidenName', label: 'Nume anterior / de Fată' },
                   { key: 'birthDate', label: 'Data Nașterii' },
                   { key: 'deathDate', label: 'Data Decesului' },
@@ -289,7 +289,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
                       {col.label}
                     </label>
                     <select
-                      value={mapping[col.key as keyof ExcelColumnMapping]}
+                      value={mapping[col.key as keyof ExcelColumnMapping] || ''}
                       onChange={(e) =>
                         setMapping({
                           ...mapping,
@@ -368,8 +368,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
                   <thead className="bg-slate-800 text-slate-200 sticky top-0 font-mono">
                     <tr>
                       <th className="p-2">#</th>
-                      <th className="p-2">Nume</th>
-                      <th className="p-2">Prenume</th>
+                      <th className="p-2">Nume & Prenume</th>
                       <th className="p-2">Data Deces</th>
                       <th className="p-2">Cimitir</th>
                       <th className="p-2">Sector/Parc/Mormant</th>
@@ -379,8 +378,9 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
                     {previewRecords.slice(0, 20).map((r, idx) => (
                       <tr key={r.id} className="hover:bg-slate-50">
                         <td className="p-2 font-mono text-slate-400">{idx + 1}</td>
-                        <td className="p-2 font-bold">{r.lastName}</td>
-                        <td className="p-2">{r.firstName}</td>
+                        <td className="p-2 font-bold text-slate-900">
+                          {r.lastName} {r.firstName && r.firstName !== 'N/A' ? r.firstName : ''}
+                        </td>
                         <td className="p-2 font-mono">{r.deathDate}</td>
                         <td className="p-2">{r.cemeteryName}</td>
                         <td className="p-2 font-mono text-[11px]">
