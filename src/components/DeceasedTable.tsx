@@ -10,7 +10,7 @@ interface DeceasedTableProps {
   onLightCandle: (recordId: string) => void;
 }
 
-type SortField = 'lastName' | 'cemeteryName' | 'deathDate' | 'county' | 'candlesLit' | 'plot' | 'graveNumber' | 'ageAtDeath';
+type SortField = 'lastName' | 'cemeteryName' | 'birthDate' | 'deathDate' | 'gender' | 'county' | 'candlesLit' | 'plot' | 'graveNumber' | 'ageAtDeath';
 
 export const DeceasedTable: React.FC<DeceasedTableProps> = ({
   records,
@@ -91,6 +91,24 @@ export const DeceasedTable: React.FC<DeceasedTableProps> = ({
                   <ArrowUpDown className="w-3 h-3" />
                 </div>
               </th>
+              <th className="py-3 px-3 cursor-pointer hover:text-amber-400 whitespace-nowrap" onClick={() => handleSort('birthDate')}>
+                <div className="flex items-center space-x-1">
+                  <span>Dată naștere</span>
+                  <ArrowUpDown className="w-3 h-3" />
+                </div>
+              </th>
+              <th className="py-3 px-3 cursor-pointer hover:text-amber-400 whitespace-nowrap" onClick={() => handleSort('deathDate')}>
+                <div className="flex items-center space-x-1">
+                  <span>Dată deces</span>
+                  <ArrowUpDown className="w-3 h-3" />
+                </div>
+              </th>
+              <th className="py-3 px-3 cursor-pointer hover:text-amber-400 whitespace-nowrap" onClick={() => handleSort('gender')}>
+                <div className="flex items-center space-x-1">
+                  <span>Gen</span>
+                  <ArrowUpDown className="w-3 h-3" />
+                </div>
+              </th>
               <th className="py-3 px-4 cursor-pointer hover:text-amber-400" onClick={() => handleSort('plot')}>
                 <div className="flex items-center space-x-1">
                   <span>Figură</span>
@@ -124,7 +142,7 @@ export const DeceasedTable: React.FC<DeceasedTableProps> = ({
           <tbody className="divide-y divide-slate-200 bg-white">
             {paginatedRecords.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center py-12 text-slate-500">
+                <td colSpan={10} className="text-center py-12 text-slate-500">
                   <p className="text-base font-medium">Nu s-a găsit nicio înregistrare.</p>
                   <p className="text-xs text-slate-400 mt-1">Încearcă să resetezi filtrele sau să adaugi date noi.</p>
                 </td>
@@ -183,6 +201,49 @@ export const DeceasedTable: React.FC<DeceasedTableProps> = ({
                         </span>
                       )}
                     </div>
+                  </td>
+
+                  {/* Dată naștere */}
+                  <td className="py-3 px-3 whitespace-nowrap font-mono text-xs text-slate-700">
+                    {renderCellText(record.birthDate)}
+                  </td>
+
+                  {/* Dată deces */}
+                  <td className="py-3 px-3 whitespace-nowrap font-mono text-xs text-slate-700">
+                    {renderCellText(record.deathDate)}
+                  </td>
+
+                  {/* Gen */}
+                  <td className="py-3 px-3 whitespace-nowrap">
+                    {(() => {
+                      const g = (record.gender || '').trim();
+                      if (!g || g === 'N/A' || g === 'Nespecificat') {
+                        return renderCellText('N/A');
+                      }
+                      const isMale = /^(masculin|m|bărbat|barbat|male)/i.test(g);
+                      const isFemale = /^(feminin|f|femeie|female)/i.test(g);
+                      if (isMale) {
+                        return (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-sky-50 text-sky-800 border border-sky-200">
+                            <span className="mr-1 text-[11px] font-bold">♂</span>
+                            <span>Masculin</span>
+                          </span>
+                        );
+                      }
+                      if (isFemale) {
+                        return (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200">
+                            <span className="mr-1 text-[11px] font-bold">♀</span>
+                            <span>Feminin</span>
+                          </span>
+                        );
+                      }
+                      return (
+                        <span className="inline-block px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-700 border border-slate-200">
+                          {g}
+                        </span>
+                      );
+                    })()}
                   </td>
 
                   {/* Figură */}
