@@ -701,7 +701,7 @@ export function addPendingApproval(
   savePendingApprovals(updatedList);
 
   const submissionDesc = data.type === 'single_record'
-    ? `Adăugare persoană: "${data.record?.lastName} ${data.record?.firstName}"`
+    ? `${data.isEdit ? 'Modificare persoană' : 'Adăugare persoană'}: "${data.record?.lastName} ${data.record?.firstName}"`
     : `Import Excel: ${data.totalRecordsCount || data.records?.length || 0} persoane (${data.fileName || 'fișier'})`;
 
   addAuditLog(
@@ -743,14 +743,15 @@ export function approvePendingApproval(
   currentList[targetIndex] = updatedItem;
   savePendingApprovals(currentList);
 
-  // Determine records to add
+  // Determine records to add or update
   let recordsToAdd: DeceasedRecord[] = [];
   if (item.type === 'single_record' && item.record) {
     recordsToAdd = [item.record];
+    const actionLabel = item.isEdit ? 'MODIFICAREA' : 'ADĂUGAREA';
     addAuditLog(
       'APPROVAL_ACCEPTED',
       'INFO',
-      `Administratorul ${reviewerName} a APROBAT adăugarea persoanei "${item.record.lastName} ${item.record.firstName}" trimisă de operatorul ${item.submittedByUserName}`
+      `Administratorul ${reviewerName} a APROBAT ${actionLabel} persoanei "${item.record.lastName} ${item.record.firstName}" trimisă de operatorul ${item.submittedByUserName}`
     );
   } else if (item.type === 'excel_batch' && item.records) {
     recordsToAdd = item.records;

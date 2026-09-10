@@ -1,24 +1,30 @@
 import React, { useState } from 'react';
-import { DeceasedRecord } from '../types/cemetery';
-import { Flame, Eye, Edit3, Trash2, MapPin, Award, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { DeceasedRecord, UserSession } from '../types/cemetery';
+import { Flame, Eye, Edit3, Trash2, MapPin, Award, ArrowUpDown, ChevronLeft, ChevronRight, Lock, ShieldCheck } from 'lucide-react';
 
 interface DeceasedTableProps {
   records: DeceasedRecord[];
+  currentUser?: UserSession | null;
   onSelectRecord: (record: DeceasedRecord) => void;
   onEditRecord?: (record: DeceasedRecord) => void;
   onDeleteRecord?: (recordId: string) => void;
   onLightCandle: (recordId: string) => void;
+  onRequireAuth?: () => void;
 }
 
 type SortField = 'lastName' | 'cemeteryName' | 'birthDate' | 'deathDate' | 'gender' | 'profession' | 'county' | 'candlesLit' | 'plot' | 'graveNumber' | 'ageAtDeath';
 
 export const DeceasedTable: React.FC<DeceasedTableProps> = ({
   records,
+  currentUser,
   onSelectRecord,
   onEditRecord,
   onDeleteRecord,
-  onLightCandle
+  onLightCandle,
+  onRequireAuth
 }) => {
+  const isAdmin = currentUser?.role === 'admin';
+  const isOperator = currentUser?.role === 'editor';
   const [sortField, setSortField] = useState<SortField>('lastName');
   const [sortAsc, setSortAsc] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -307,38 +313,78 @@ export const DeceasedTable: React.FC<DeceasedTableProps> = ({
                   {/* Action buttons */}
                   <td className="py-3 px-4 text-right">
                     <div className="flex items-center justify-end space-x-1">
+                      {/* Vizualizare Fișă Detaliată - Disponibil tuturor */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           onSelectRecord(record);
                         }}
-                        className="p-1.5 text-slate-600 hover:text-amber-700 hover:bg-amber-100 rounded-md transition-colors"
+                        className="p-1.5 text-slate-600 hover:text-amber-700 hover:bg-amber-100 rounded-md transition-colors cursor-pointer"
                         title="Vezi Fișă Detaliată"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
 
-                      {onEditRecord && (
+                      {/* Modificare / Editare:
+                          - Administrator: Editare directă
+                          - Operator: Propunere modificare (necesită aprobare)
+                          - Vizitator neautentificat: Autentificare necesară
+                      */}
+                      {isAdmin && onEditRecord && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             onEditRecord(record);
                           }}
-                          className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-                          title="Editează înregistrarea"
+                          className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors cursor-pointer"
+                          title="Editează înregistrarea (Administrator)"
                         >
                           <Edit3 className="w-4 h-4" />
                         </button>
                       )}
 
-                      {onDeleteRecord && (
+                      {isOperator && onEditRecord && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEditRecord(record);
+                          }}
+                          className="p-1.5 text-amber-700 hover:text-amber-900 hover:bg-amber-100 rounded-md transition-colors cursor-pointer"
+                          title="Propune modificări (Necesită aprobare Administrator)"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                      )}
+
+                      {!isAdmin && !isOperator && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onRequireAuth) {
+                              onRequireAuth();
+                            } else if (onEditRecord) {
+                              onEditRecord(record);
+                            }
+                          }}
+                          className="p-1.5 text-slate-300 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors cursor-pointer"
+                          title="Autentificare necesară (Doar administratorii și operatorii pot modifica date)"
+                        >
+                          <Lock className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+
+                      {/* Ștergere Înregistrare:
+                          - STRICT pentru Administrator!
+                          - Operatorii de date NU au permisiunea de a șterge!
+                      */}
+                      {isAdmin && onDeleteRecord && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             onDeleteRecord(record.id);
                           }}
-                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                          title="Șterge înregistrarea"
+                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
+                          title="Șterge definitiv înregistrarea (Doar Administrator)"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

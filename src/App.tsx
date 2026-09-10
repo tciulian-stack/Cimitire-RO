@@ -313,6 +313,11 @@ export default function App() {
   };
 
   const handleDeleteRecord = (recordId: string) => {
+    if (!currentUser || currentUser.role !== 'admin') {
+      showToast('Acces interzis: Doar administratorii au permisiunea de a șterge înregistrări!');
+      return;
+    }
+
     const record = records.find((r) => r.id === recordId);
     const confirmName = record ? `${record.lastName} ${record.firstName}` : 'această persoană';
 
@@ -321,9 +326,19 @@ export default function App() {
       if (selectedDetailRecord?.id === recordId) {
         setSelectedDetailRecord(null);
       }
-      addAuditLog('RECORD_DELETE', 'WARNING', `Înregistrare ștearsă: "${confirmName}" (ID: ${recordId})`);
-      showToast('Înregistrarea a fost ștearsă din baza de date.');
+      addAuditLog('RECORD_DELETE', 'WARNING', `Înregistrare ștearsă de administrator (${currentUser.name || currentUser.email}): "${confirmName}" (ID: ${recordId})`);
+      showToast('Înregistrarea a fost ștearsă definitiv din baza de date.');
     }
+  };
+
+  const handleOpenEditRecord = (record: DeceasedRecord) => {
+    if (!currentUser) {
+      showToast('Autentifică-te ca administrator sau operator pentru a efectua modificări.');
+      setIsAuthModalOpen(true);
+      return;
+    }
+    setRecordToEdit(record);
+    setIsAddEditModalOpen(true);
   };
 
   const handleSaveRecord = (record: DeceasedRecord) => {
@@ -341,15 +356,21 @@ export default function App() {
 
     // If current user is Operator Date (editor), route as Pending Approval for Administrator
     if (currentUser?.role === 'editor') {
+      const isExisting = records.some((r) => r.id === sanitizedRecord.id);
       addPendingApproval({
         type: 'single_record',
         submittedByUserId: currentUser.id,
         submittedByUserName: currentUser.name || currentUser.email,
         submittedByUserEmail: currentUser.email,
+        isEdit: isExisting,
         record: sanitizedRecord
       });
       refreshApprovals();
-      showToast(`Înregistrarea pentru "${sanitizedRecord.lastName} ${sanitizedRecord.firstName}" a fost trimisă cu succes administratorului spre aprobare!`);
+      if (isExisting) {
+        showToast(`Modificările pentru "${sanitizedRecord.lastName} ${sanitizedRecord.firstName}" au fost trimise administratorului spre verificare și aprobare!`);
+      } else {
+        showToast(`Înregistrarea nouă pentru "${sanitizedRecord.lastName} ${sanitizedRecord.firstName}" a fost trimisă administratorului spre verificare și aprobare!`);
+      }
       return;
     }
 
@@ -408,9 +429,20 @@ export default function App() {
     const reviewer = currentUser?.name || currentUser?.email || 'Administrator';
     const result = approvePendingApproval(id, reviewer);
     if (result.success && result.recordsToAdd && result.recordsToAdd.length > 0) {
-      setRecords((prev) => [...result.recordsToAdd, ...prev]);
+      setRecords((prev) => {
+        let updated = [...prev];
+        result.recordsToAdd.forEach((newRec) => {
+          const idx = updated.findIndex((r) => r.id === newRec.id);
+          if (idx !== -1) {
+            updated[idx] = newRec;
+          } else {
+            updated.unshift(newRec);
+          }
+        });
+        return updated;
+      });
       refreshApprovals();
-      showToast(`Solicitarea a fost aprobată! S-au adăugat ${result.recordsToAdd.length} persoane în registru.`);
+      showToast(`Solicitarea a fost aprobată! Modificările au fost aplicate în baza de date.`);
     } else if (result.success) {
       refreshApprovals();
       showToast('Solicitarea a fost marcată ca aprobată.');
@@ -537,24 +569,22 @@ export default function App() {
             {viewMode === 'table' ? (
               <DeceasedTable
                 records={filteredRecords}
+                currentUser={currentUser}
                 onSelectRecord={(r) => setSelectedDetailRecord(r)}
-                onEditRecord={(r) => {
-                  setRecordToEdit(r);
-                  setIsAddEditModalOpen(true);
-                }}
+                onEditRecord={handleOpenEditRecord}
                 onDeleteRecord={handleDeleteRecord}
                 onLightCandle={handleLightCandle}
+                onRequireAuth={() => setIsAuthModalOpen(true)}
               />
             ) : (
               <DeceasedGrid
                 records={filteredRecords}
+                currentUser={currentUser}
                 onSelectRecord={(r) => setSelectedDetailRecord(r)}
-                onEditRecord={(r) => {
-                  setRecordToEdit(r);
-                  setIsAddEditModalOpen(true);
-                }}
+                onEditRecord={handleOpenEditRecord}
                 onDeleteRecord={handleDeleteRecord}
                 onLightCandle={handleLightCandle}
+                onRequireAuth={() => setIsAuthModalOpen(true)}
               />
             )}
 
@@ -662,13 +692,13 @@ export default function App() {
       {/* Detail Record Modal */}
       <DeceasedDetailModal
         record={selectedDetailRecord}
+        currentUser={currentUser}
         onClose={() => setSelectedDetailRecord(null)}
         onLightCandle={handleLightCandle}
         onAddTributeMessage={handleAddTributeMessage}
-        onEdit={(r) => {
-          setRecordToEdit(r);
-          setIsAddEditModalOpen(true);
-        }}
+        onEdit={handleOpenEditRecord}
+        onDelete={handleDeleteRecord}
+        onRequireAuth={() => setIsAuthModalOpen(true)}
       />
 
       {/* Excel Import Modal */}

@@ -117,7 +117,8 @@ export interface PendingApproval {
   reviewedBy?: string;
   rejectionReason?: string;
   
-  // Înregistrare individuală (din Adaugă Persoană)
+  // Înregistrare individuală (din Adaugă Persoană sau Editează Persoană)
+  isEdit?: boolean;
   record?: DeceasedRecord;
 
   // Set înregistrări (din Import Excel)

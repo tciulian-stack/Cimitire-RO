@@ -204,10 +204,12 @@ export const AddEditRecordModal: React.FC<AddEditRecordModalProps> = ({
               <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
               <div>
                 <p className="font-bold text-amber-950">
-                  Mod Operator Date: Verificare & Aprobare Necesară
+                  {initialRecord ? 'Mod Operator Date: Modificare Supusă Aprobării' : 'Mod Operator Date: Adăugare Supusă Aprobării'}
                 </p>
                 <p className="text-amber-800 text-[11px] mt-0.5">
-                  Datele introduse vor fi transmise administratorului de sistem. După ce acesta le va verifica și accepta, persoana va fi adăugată automat în registrul public oficial.
+                  {initialRecord
+                    ? 'Modificările completate nu vor altera direct baza de date publică. Ele vor fi transmise administratorului de sistem pentru verificare și aprobare.'
+                    : 'Datele introduse vor fi transmise administratorului de sistem. După ce acesta le va verifica și accepta, persoana va fi adăugată automat în registrul public oficial.'}
                 </p>
               </div>
             </div>
@@ -590,7 +592,7 @@ export const AddEditRecordModal: React.FC<AddEditRecordModalProps> = ({
               {currentUser?.role === 'editor' ? (
                 <>
                   <Send className="w-4 h-4" />
-                  <span>Trimite spre Aprobare Administrator</span>
+                  <span>{initialRecord ? 'Trimite Modificările spre Aprobare' : 'Trimite spre Aprobare Administrator'}</span>
                 </>
               ) : (
                 <>

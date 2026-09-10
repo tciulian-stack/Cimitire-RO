@@ -42,14 +42,14 @@ export const OperatorSubmissionsModal: React.FC<OperatorSubmissionsModalProps> =
             <div>
               <div className="flex items-center space-x-2">
                 <h3 className="font-bold text-base font-serif text-white">
-                  Cererile Mele de Adăugare
+                  Cererile Mele de Modificare & Adăugare
                 </h3>
                 <span className="px-2 py-0.5 bg-amber-950 text-amber-300 border border-amber-800 rounded-md text-[10px] font-mono font-bold uppercase">
                   Operator
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                Stadiul verificării și aprobării datelor trimise de tine către administrator
+                Stadiul verificării și aprobării datelor sau modificărilor trimise de tine către administrator
               </p>
             </div>
           </div>
@@ -84,9 +84,9 @@ export const OperatorSubmissionsModal: React.FC<OperatorSubmissionsModalProps> =
           {mySubmissions.length === 0 ? (
             <div className="text-center py-10 text-slate-500">
               <AlertCircle className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-              <p className="font-bold text-slate-700 text-sm">Nu ai trimis încă nicio solicitare de adăugare.</p>
+              <p className="font-bold text-slate-700 text-sm">Nu ai trimis încă nicio solicitare de adăugare sau modificare.</p>
               <p className="text-xs text-slate-400 mt-1">
-                Folosește butoanele "Adaugă Persoană" sau "Import Excel" din antet pentru a trimite date spre aprobare.
+                Poți adăuga persoane noi, importa fișiere Excel sau propune modificări pentru persoanele existente.
               </p>
             </div>
           ) : (
@@ -108,16 +108,20 @@ export const OperatorSubmissionsModal: React.FC<OperatorSubmissionsModalProps> =
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-start space-x-3">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                        isSingle ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
+                        isSingle 
+                          ? item.isEdit 
+                            ? 'bg-blue-100 text-blue-800' 
+                            : 'bg-amber-100 text-amber-800'
+                          : 'bg-emerald-100 text-emerald-800'
                       }`}>
                         {isSingle ? <User className="w-4 h-4" /> : <FileSpreadsheet className="w-4 h-4" />}
                       </div>
 
                       <div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                           <span className="font-bold text-xs text-slate-900">
                             {isSingle && item.record 
-                              ? `${item.record.lastName} ${item.record.firstName}`
+                              ? `${item.isEdit ? 'Modificare: ' : 'Adăugare: '}${item.record.lastName} ${item.record.firstName}`
                               : `Import Excel (${item.totalRecordsCount || item.records?.length || 0} persoane)`}
                           </span>
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center space-x-1 ${

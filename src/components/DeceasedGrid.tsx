@@ -1,22 +1,28 @@
 import React from 'react';
-import { DeceasedRecord } from '../types/cemetery';
-import { Flame, Eye, MapPin, Calendar, Award, Edit3, Trash2 } from 'lucide-react';
+import { DeceasedRecord, UserSession } from '../types/cemetery';
+import { Flame, Eye, MapPin, Calendar, Award, Edit3, Trash2, Lock } from 'lucide-react';
 
 interface DeceasedGridProps {
   records: DeceasedRecord[];
+  currentUser?: UserSession | null;
   onSelectRecord: (record: DeceasedRecord) => void;
   onEditRecord: (record: DeceasedRecord) => void;
   onDeleteRecord: (recordId: string) => void;
   onLightCandle: (recordId: string) => void;
+  onRequireAuth?: () => void;
 }
 
 export const DeceasedGrid: React.FC<DeceasedGridProps> = ({
   records,
+  currentUser,
   onSelectRecord,
   onEditRecord,
   onDeleteRecord,
-  onLightCandle
+  onLightCandle,
+  onRequireAuth
 }) => {
+  const isAdmin = currentUser?.role === 'admin';
+  const isOperator = currentUser?.role === 'editor';
   if (records.length === 0) {
     return (
       <div className="bg-white border border-slate-200 rounded-xl p-12 text-center text-slate-500 shadow-sm">
@@ -150,27 +156,62 @@ export const DeceasedGrid: React.FC<DeceasedGridProps> = ({
               </button>
 
               <div className="flex items-center space-x-1">
+                {/* Vizualizare Fișă */}
                 <button
                   onClick={() => onSelectRecord(record)}
-                  className="p-1.5 text-slate-600 hover:text-amber-800 hover:bg-amber-100 rounded-md transition-colors"
-                  title="Vezi Fișă"
+                  className="p-1.5 text-slate-600 hover:text-amber-800 hover:bg-amber-100 rounded-md transition-colors cursor-pointer"
+                  title="Vezi Fișă Detaliată"
                 >
                   <Eye className="w-4 h-4" />
                 </button>
-                <button
-                  onClick={() => onEditRecord(record)}
-                  className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-                  title="Editează"
-                >
-                  <Edit3 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => onDeleteRecord(record.id)}
-                  className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                  title="Șterge"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+
+                {/* Modificare / Editare */}
+                {isAdmin && (
+                  <button
+                    onClick={() => onEditRecord(record)}
+                    className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors cursor-pointer"
+                    title="Editează înregistrarea (Administrator)"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                  </button>
+                )}
+
+                {isOperator && (
+                  <button
+                    onClick={() => onEditRecord(record)}
+                    className="p-1.5 text-amber-700 hover:text-amber-900 hover:bg-amber-100 rounded-md transition-colors cursor-pointer"
+                    title="Propune modificări (Necesită aprobare Administrator)"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                  </button>
+                )}
+
+                {!isAdmin && !isOperator && (
+                  <button
+                    onClick={() => {
+                      if (onRequireAuth) {
+                        onRequireAuth();
+                      } else {
+                        onEditRecord(record);
+                      }
+                    }}
+                    className="p-1.5 text-slate-300 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors cursor-pointer"
+                    title="Autentificare necesară (Doar administratorii și operatorii pot modifica date)"
+                  >
+                    <Lock className="w-3.5 h-3.5" />
+                  </button>
+                )}
+
+                {/* Ștergere: DOAR pentru Administrator! Operatorii NU pot șterge! */}
+                {isAdmin && (
+                  <button
+                    onClick={() => onDeleteRecord(record.id)}
+                    className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
+                    title="Șterge definitiv înregistrarea (Doar Administrator)"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
               </div>
             </div>
 

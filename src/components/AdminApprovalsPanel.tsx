@@ -216,11 +216,19 @@ export const AdminApprovalsPanel: React.FC<AdminApprovalsPanelProps> = ({
                       <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                         <span className={`text-[11px] font-bold uppercase px-2 py-0.5 rounded-full border ${
                           isSingle
-                            ? 'bg-amber-100 text-amber-900 border-amber-300'
+                            ? item.isEdit
+                              ? 'bg-blue-100 text-blue-900 border-blue-300'
+                              : 'bg-amber-100 text-amber-900 border-amber-300'
                             : 'bg-emerald-100 text-emerald-900 border-emerald-300'
                         }`}>
-                          {isSingle ? 'Adăugare Persoană' : 'Import Excel'}
+                          {isSingle ? (item.isEdit ? 'Modificare Persoană' : 'Adăugare Persoană') : 'Import Excel'}
                         </span>
+
+                        {isSingle && item.isEdit && (
+                          <span className="text-[10px] font-semibold bg-indigo-50 text-indigo-800 border border-indigo-200 px-2 py-0.5 rounded-full">
+                            Actualizare înregistrare existentă
+                          </span>
+                        )}
 
                         <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border flex items-center space-x-1 ${
                           item.status === 'pending'

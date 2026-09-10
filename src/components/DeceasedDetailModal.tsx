@@ -1,22 +1,30 @@
 import React, { useState } from 'react';
-import { DeceasedRecord } from '../types/cemetery';
-import { Flame, X, Printer, MapPin, Calendar, Award, User, Church, MessageSquare, Send, Share2, Copy, Check, ZoomIn, Camera, Edit3 } from 'lucide-react';
+import { DeceasedRecord, UserSession } from '../types/cemetery';
+import { Flame, X, Printer, MapPin, Calendar, Award, User, Church, MessageSquare, Send, Share2, Copy, Check, ZoomIn, Camera, Edit3, Trash2, Lock, ShieldCheck } from 'lucide-react';
 
 interface DeceasedDetailModalProps {
   record: DeceasedRecord | null;
+  currentUser?: UserSession | null;
   onClose: () => void;
   onLightCandle: (recordId: string) => void;
   onAddTributeMessage: (recordId: string, author: string, message: string) => void;
   onEdit: (record: DeceasedRecord) => void;
+  onDelete?: (recordId: string) => void;
+  onRequireAuth?: () => void;
 }
 
 export const DeceasedDetailModal: React.FC<DeceasedDetailModalProps> = ({
   record,
+  currentUser,
   onClose,
   onLightCandle,
   onAddTributeMessage,
-  onEdit
+  onEdit,
+  onDelete,
+  onRequireAuth
 }) => {
+  const isAdmin = currentUser?.role === 'admin';
+  const isOperator = currentUser?.role === 'editor';
   const [authorName, setAuthorName] = useState('');
   const [tributeText, setTributeText] = useState('');
   const [showTributeForm, setShowTributeForm] = useState(false);
@@ -458,18 +466,75 @@ ${record.notes && record.notes !== 'N/A' ? `Epitaf: "${record.notes}"\n` : ''}`;
         </div>
 
         {/* Footer actions */}
-        <div className="bg-slate-100 p-4 border-t border-slate-200 flex items-center justify-between print:hidden">
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => {
-                onClose();
-                onEdit(record);
-              }}
-              className="px-3.5 py-2 text-xs font-medium rounded-lg bg-white text-slate-800 border border-slate-300 hover:bg-slate-50 transition-colors shadow-2xs flex items-center space-x-1.5 cursor-pointer"
-            >
-              <Edit3 className="w-3.5 h-3.5 text-slate-600" />
-              <span>Editează Înregistrarea</span>
-            </button>
+        <div className="bg-slate-100 p-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 print:hidden">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* 1. Edit / Modify action:
+                - Admin: Editează Înregistrarea
+                - Operator: Propune Modificări (Aprobare Admin)
+                - Unauthenticated: Autentificare pentru Editare
+            */}
+            {isAdmin && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onEdit(record);
+                }}
+                className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-white text-slate-800 border border-slate-300 hover:bg-slate-50 transition-colors shadow-2xs flex items-center space-x-1.5 cursor-pointer"
+                title="Editează înregistrarea (Administrator)"
+              >
+                <Edit3 className="w-3.5 h-3.5 text-blue-600" />
+                <span>Editează Înregistrarea</span>
+              </button>
+            )}
+
+            {isOperator && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onEdit(record);
+                }}
+                className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100 transition-colors shadow-2xs flex items-center space-x-1.5 cursor-pointer"
+                title="Propune modificări pentru această persoană (trimis spre aprobare administrator)"
+              >
+                <Edit3 className="w-3.5 h-3.5 text-amber-600" />
+                <span>Propune Modificări (Aprobare Admin)</span>
+              </button>
+            )}
+
+            {!isAdmin && !isOperator && (
+              <button
+                onClick={() => {
+                  if (onRequireAuth) {
+                    onRequireAuth();
+                  } else {
+                    onClose();
+                    onEdit(record);
+                  }
+                }}
+                className="px-3.5 py-2 text-xs font-medium rounded-lg bg-slate-200/80 text-slate-600 border border-slate-300 hover:bg-slate-200 transition-colors flex items-center space-x-1.5 cursor-pointer"
+                title="Autentificare necesară pentru modificări"
+              >
+                <Lock className="w-3.5 h-3.5 text-slate-500" />
+                <span>Autentificare pentru Editare</span>
+              </button>
+            )}
+
+            {/* 2. Delete action: STRICTLY for Administrator!
+                Operators cannot delete records!
+            */}
+            {isAdmin && onDelete && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onDelete(record.id);
+                }}
+                className="px-3 py-2 text-xs font-semibold rounded-lg bg-white text-red-600 border border-red-200 hover:bg-red-50 transition-colors shadow-2xs flex items-center space-x-1.5 cursor-pointer"
+                title="Șterge definitiv înregistrarea (Doar Administrator)"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                <span>Șterge Înregistrarea</span>
+              </button>
+            )}
 
             <button
               onClick={() => setShowShareModal(true)}
