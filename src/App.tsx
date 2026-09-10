@@ -32,6 +32,7 @@ import { AuthModal } from './components/AuthModal';
 import { AdminApprovalsModal } from './components/AdminApprovalsModal';
 import { OperatorSubmissionsModal } from './components/OperatorSubmissionsModal';
 import { CheckCircle, Info, Flame, Heart, Sparkles, ShieldCheck } from 'lucide-react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 const STORAGE_KEY = 'cimitire_romania_db_v2';
 const CEMETERIES_STORAGE_KEY = 'cimitire_romania_cemeteries_v1';
@@ -743,7 +744,9 @@ export default function App() {
         />
       )}
 
+      {/* Vercel Speed Insights */}
+      <SpeedInsights />
+
     </div>
   );
 }
-
