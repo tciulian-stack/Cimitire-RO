@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { DeceasedRecord } from '../types/cemetery';
-import { Flame, MapPin, Award, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Flame, Eye, Edit3, Trash2, MapPin, Award, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface DeceasedTableProps {
   records: DeceasedRecord[];
@@ -139,13 +139,16 @@ export const DeceasedTable: React.FC<DeceasedTableProps> = ({
                   <ArrowUpDown className="w-3 h-3" />
                 </div>
               </th>
+              <th className="py-3 px-4 text-right">
+                <span>Acțiuni</span>
+              </th>
             </tr>
           </thead>
 
           <tbody className="divide-y divide-slate-200 bg-white">
             {paginatedRecords.length === 0 ? (
               <tr>
-                <td colSpan={10} className="text-center py-12 text-slate-500">
+                <td colSpan={11} className="text-center py-12 text-slate-500">
                   <p className="text-base font-medium">Nu s-a găsit nicio înregistrare.</p>
                   <p className="text-xs text-slate-400 mt-1">Încearcă să resetezi filtrele sau să adaugi date noi.</p>
                 </td>
@@ -299,6 +302,48 @@ export const DeceasedTable: React.FC<DeceasedTableProps> = ({
                         return 'N/A';
                       })()}
                     </span>
+                  </td>
+
+                  {/* Action buttons */}
+                  <td className="py-3 px-4 text-right">
+                    <div className="flex items-center justify-end space-x-1">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectRecord(record);
+                        }}
+                        className="p-1.5 text-slate-600 hover:text-amber-700 hover:bg-amber-100 rounded-md transition-colors"
+                        title="Vezi Fișă Detaliată"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+
+                      {onEditRecord && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEditRecord(record);
+                          }}
+                          className="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                          title="Editează înregistrarea"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                      )}
+
+                      {onDeleteRecord && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteRecord(record.id);
+                          }}
+                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                          title="Șterge înregistrarea"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))
